@@ -1,0 +1,435 @@
+name: Build VitaGuard APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Project Files
+        run: |
+          mkdir -p app/src/main/java/com/health/vitaguard
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/drawable
+
+          cat > settings.gradle << 'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+                  maven { url 'https://jitpack.io' }
+              }
+          }
+          rootProject.name = "VitaGuard"
+          include ':app'
+          EOF
+
+          cat > build.gradle << 'EOF'
+          plugins {
+              id 'com.android.application' version '8.1.4' apply false
+              id 'com.android.library' version '8.1.4' apply false
+              id 'org.jetbrains.kotlin.android' version '1.9.20' apply false
+          }
+          EOF
+
+          cat > gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          kotlin.code.style=official
+          EOF
+
+          cat > app/build.gradle << 'EOF'
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
+          android {
+              namespace 'com.health.vitaguard'
+              compileSdk 34
+              defaultConfig {
+                  applicationId "com.health.vitaguard"
+                  minSdk 24
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_17
+                  targetCompatibility JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = '17'
+              }
+          }
+          dependencies {
+              implementation 'androidx.core:core-ktx:1.12.0'
+              implementation 'androidx.appcompat:appcompat:1.6.1'
+              implementation 'com.google.android.material:material:1.11.0'
+              implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+              implementation 'androidx.cardview:cardview:1.0.0'
+              implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+          }
+          EOF
+
+          cat > app/proguard-rules.pro << 'EOF'
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <uses-permission android:name="android.permission.BLUETOOTH" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.VIBRATE" />
+              <uses-permission android:name="android.permission.SEND_SMS" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <application
+                  android:allowBackup="true"
+                  android:icon="@drawable/ic_launcher"
+                  android:label="@string/app_name"
+                  android:supportsRtl="true"
+                  android:theme="@style/Theme.VitaGuard">
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/values/strings.xml << 'EOF'
+          <resources>
+              <string name="app_name">VitaGuard</string>
+              <string name="heart_rate">معدل ضربات القلب</string>
+              <string name="spo2">الأكسجين في الدم</string>
+              <string name="temperature">درجة الحرارة</string>
+              <string name="blood_pressure">ضغط الدم</string>
+              <string name="start_measure">بدء القياس</string>
+              <string name="stop_measure">إيقاف</string>
+              <string name="connect_bt">اتصال Bluetooth</string>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/values/themes.xml << 'EOF'
+          <resources>
+              <style name="Theme.VitaGuard" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                  <item name="colorPrimary">#2C5F8D</item>
+                  <item name="colorPrimaryVariant">#1E4263</item>
+                  <item name="colorOnPrimary">#FFFFFF</item>
+                  <item name="android:statusBarColor">#2C5F8D</item>
+              </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/values/colors.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="primary">#2C5F8D</color>
+              <color name="primary_dark">#1E4263</color>
+              <color name="background">#F5F7FA</color>
+              <color name="green_normal">#4CAF50</color>
+              <color name="yellow_warning">#FFC107</color>
+              <color name="red_danger">#F44336</color>
+              <color name="text_primary">#1A1A1A</color>
+              <color name="text_secondary">#6B7280</color>
+              <color name="white">#FFFFFF</color>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/ic_launcher.xml << 'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path android:fillColor="#2C5F8D" android:pathData="M0,0h108v108h-108z"/>
+              <path android:fillColor="#FFFFFF" android:pathData="M50,25 h8 v25 h25 v8 h-25 v25 h-8 v-25 h-25 v-8 h25 z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/background"
+              android:layoutDirection="rtl">
+              <LinearLayout
+                  android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical"
+                  android:padding="16dp">
+                  <TextView
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:text="VitaGuard"
+                      android:textSize="28sp"
+                      android:textStyle="bold"
+                      android:textColor="@color/primary"
+                      android:gravity="center"
+                      android:paddingBottom="8dp"/>
+                  <TextView
+                      android:id="@+id/tvStatus"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:text="غير متصل"
+                      android:textSize="14sp"
+                      android:textColor="@color/red_danger"
+                      android:gravity="center"
+                      android:paddingBottom="16dp"/>
+                  <androidx.cardview.widget.CardView
+                      android:id="@+id/cardHeart"
+                      android:layout_width="match_parent"
+                      android:layout_height="150dp"
+                      android:layout_margin="6dp"
+                      app:cardCornerRadius="16dp"
+                      app:cardElevation="4dp">
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"
+                          android:orientation="vertical"
+                          android:gravity="center">
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="❤️"
+                              android:textSize="32sp"/>
+                          <TextView
+                              android:id="@+id/tvHeartRate"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="0"
+                              android:textSize="36sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text_primary"/>
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="bpm - نبضات"
+                              android:textSize="12sp"
+                              android:textColor="@color/text_secondary"/>
+                      </LinearLayout>
+                  </androidx.cardview.widget.CardView>
+                  <androidx.cardview.widget.CardView
+                      android:id="@+id/cardSpo2"
+                      android:layout_width="match_parent"
+                      android:layout_height="150dp"
+                      android:layout_margin="6dp"
+                      app:cardCornerRadius="16dp"
+                      app:cardElevation="4dp">
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"
+                          android:orientation="vertical"
+                          android:gravity="center">
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="🫁"
+                              android:textSize="32sp"/>
+                          <TextView
+                              android:id="@+id/tvSpo2"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="0"
+                              android:textSize="36sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text_primary"/>
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="% - أكسجين"
+                              android:textSize="12sp"
+                              android:textColor="@color/text_secondary"/>
+                      </LinearLayout>
+                  </androidx.cardview.widget.CardView>
+                  <androidx.cardview.widget.CardView
+                      android:id="@+id/cardTemp"
+                      android:layout_width="match_parent"
+                      android:layout_height="150dp"
+                      android:layout_margin="6dp"
+                      app:cardCornerRadius="16dp"
+                      app:cardElevation="4dp">
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"
+                          android:orientation="vertical"
+                          android:gravity="center">
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="🌡️"
+                              android:textSize="32sp"/>
+                          <TextView
+                              android:id="@+id/tvTemp"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="0.0"
+                              android:textSize="36sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text_primary"/>
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="°C - حرارة"
+                              android:textSize="12sp"
+                              android:textColor="@color/text_secondary"/>
+                      </LinearLayout>
+                  </androidx.cardview.widget.CardView>
+                  <androidx.cardview.widget.CardView
+                      android:id="@+id/cardBP"
+                      android:layout_width="match_parent"
+                      android:layout_height="150dp"
+                      android:layout_margin="6dp"
+                      app:cardCornerRadius="16dp"
+                      app:cardElevation="4dp">
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"
+                          android:orientation="vertical"
+                          android:gravity="center">
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="💉"
+                              android:textSize="32sp"/>
+                          <TextView
+                              android:id="@+id/tvBP"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="0/0"
+                              android:textSize="28sp"
+                              android:textStyle="bold"
+                              android:textColor="@color/text_primary"/>
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="mmHg - ضغط"
+                              android:textSize="12sp"
+                              android:textColor="@color/text_secondary"/>
+                      </LinearLayout>
+                  </androidx.cardview.widget.CardView>
+                  <Button
+                      android:id="@+id/btnConnect"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginTop="16dp"
+                      android:layout_marginBottom="6dp"
+                      android:text="@string/connect_bt"
+                      android:backgroundTint="@color/primary"/>
+                  <Button
+                      android:id="@+id/btnStart"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_marginBottom="6dp"
+                      android:text="@string/start_measure"
+                      android:backgroundTint="@color/green_normal"/>
+                  <Button
+                      android:id="@+id/btnStop"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:text="@string/stop_measure"
+                      android:backgroundTint="@color/red_danger"/>
+              </LinearLayout>
+          </ScrollView>
+          EOF
+
+          cat > app/src/main/java/com/health/vitaguard/MainActivity.kt << 'EOF'
+          package com.health.vitaguard
+
+          import android.Manifest
+          import android.content.pm.PackageManager
+          import android.os.Build
+          import android.os.Bundle
+          import android.os.Handler
+          import android.os.Looper
+          import android.os.Vibrator
+          import android.widget.Toast
+          import androidx.appcompat.app.AppCompatActivity
+          import androidx.core.app.ActivityCompat
+          import androidx.core.content.ContextCompat
+          import kotlinx.android.synthetic.main.activity_main.*
+          import kotlin.random.Random
+
+          class MainActivity : AppCompatActivity() {
+
+              private var isConnected = false
+              private var isMeasuring = false
+
+              private val heartRateMin = 50
+              private val heartRateMax = 120
+              private val spo2Min = 92
+              private val tempMin = 35.0
+              private val tempMax = 38.0
+              private val sysMax = 140
+              private val diaMax = 90
+
+              private val handler = Handler(Looper.getMainLooper())
+              private lateinit var runnable: Runnable
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  setContentView(R.layout.activity_main)
+
+                  requestPermissions()
+                  setupListeners()
+                  setupRunnable()
+              }
+
+              private fun requestPermissions() {
+                  val permissions = mutableListOf<String>()
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                      permissions.add(Manifest.permission.BLUETOOTH_SCAN)
+                      permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
+                  }
+                  permissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+                  permissions.add(Manifest.permission.VIBRATE)
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                      permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                  }
+                  val needRequest = permissions.filter {
+                      ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+                  }
+                  if (needRequest.isNotEmpty()) {
+                      ActivityCompat.requestPermissions(this, needRequest.toTypedArray(), 100)
+                  }
+              }
+
+              private fun setupListeners() {
+                  btnConnect.setOnClickListener {
+                      isConnected = !isConnected
+                      if (isConnected) {
+                          tvStatus.text = "متصل - جاهز للقياس"
+                          tvStatus.setTextColor(ContextCompat.getColor(this, R.color.green_normal))
+                          Toast.makeText(this, "تم الاتصال", Toast.LENGTH_SHORT).show()
+                      } else {
+                          tvStatus.text = "غير متصل"
+                 
